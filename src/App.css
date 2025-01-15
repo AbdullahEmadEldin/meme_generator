@@ -1,10 +1,10 @@
 #root {
   max-width: 1280px;
-
-  text-align: center;
+  margin: 0 auto;
 }
 
 .header{
+  width: 100%;
   background: linear-gradient(90deg, #672280 1.18%, #A626D3 100%);
     padding: 12px;
     text-align: start;
