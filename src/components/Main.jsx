@@ -1,63 +1,56 @@
 import React from 'react'
+import DieContainer from './die_container'
+import RollBtn from './roll_btn'
 
 export default function Main() {
-    const [meme, setMeme] = React.useState({
-        topText: "Hi there",
-        bottomText: "This is a meme",
-        randomImage: "http://i.imgflip.com/1bij.jpg"
-    })
+    const [dice, setDice] = React.useState(() => generateNewDice());
+    const gameWon =
+        dice.every(die => die.isHeld) &&
+        dice.every(die => die.value === dice[0].value)
 
-    function handleChange(event){
-        const { value} = event.target
-        setMeme(prevMeme => ({
-            ...prevMeme,
-            [event.target.name]: value
-        }))
+    /// generate 10 dice
+    function generateNewDice() {
+        return new Array(10)
+            .fill()
+            .map((_, index) => ({
+                id: index,
+                value: Math.floor(Math.random() * 6) + 1,
+                isHeld: false
+            }))
     }
-    /// image state and fetching images array when app mounts
-    const [memes, setMemes] = React.useState([])
-    React.useEffect(() => {
-        fetch("https://api.imgflip.com/get_memes")
-            .then(res => res.json())
-            .then(data => setMemes(data.data.memes))
-    }, [])
-    ///
-    function getRandomMemeImage() {
-        const randomNumber = Math.floor(Math.random() * memes.length)
-        const url = memes[randomNumber].url
-        setMeme(prevMeme => ({
-            ...prevMeme,
-            randomImage: url
-        }))
+
+    /// roll dice to change all numbers or the held one.
+    function rollDice() {
+        if (gameWon) {
+            setDice(generateNewDice())
+        } else {
+            setDice(oldDice => oldDice.map((die, index) =>
+                die.isHeld ?
+                    die :
+                    { ...die, value: Math.ceil(Math.random() * 6) }
+            ))
+        }
     }
+    function holdDie(die, currentElementIndex) {
+        // update the isHeld value
+        setDice(prevDice =>
+            prevDice
+                .map((die, i) => i === currentElementIndex
+                    ? { ...die, isHeld: !die.isHeld }
+                    : die)
+        )
+
+    }
+    //
+    const diceElements = dice.map((die, currentElementIndex) => (
+        <DieContainer value={die.value} key={currentElementIndex} isHeld={die.isHeld} onClick={() => holdDie(die, currentElementIndex)} />
+    ))
     return (
         <main>
-        <div className="form">
-        <div className="inputs" onChange={handleChange}>
-            <label className="input-tile">Top Text
-                <input
-
-                    type="text"
-                    placeholder="One does not simply"
-                    name="topText"
-                />
-            </label>
-
-            <label className="input-tile" onChange={handleChange}>Bottom Text
-                <input
-                    type="text"
-                    placeholder="Walk into Mordor"
-                    name="bottomText"
-                />
-            </label>
-        </div>
-        <button className="generate-btn" onClick={getRandomMemeImage}>Get a new meme image 🖼</button>
-    </div>
-    <div className="meme">
-        <img src={meme.randomImage} />
-        <span className="top">{meme.topText}</span>
-        <span className="bottom">{meme.bottomText}</span>
-    </div>
-</main>
+            <div className="dies-grid">
+                {diceElements}
+            </div>
+            <RollBtn onClick={rollDice} gameWon={gameWon} />
+        </main>
     )
 } 
